@@ -21,4 +21,26 @@ read_statm <- function() {
 }
 
 
+#	Returns a named list with select values from /proc/self/stat. Names are not
+#	present in the data file, but rather are defined in the documentation for
+#	procfs (minflt, cminflt, majflt, cmajflt, utime, stime, cutime cstime) See
+#	http://man7.org/linux/man-pages/man5/proc.5.html for details. System times are
+#	converted from "clock ticks" to seconds using a conversion factor from the
+#	Bash command "getconf".
+read_stat <- function() {
+	sc_clk_tck = as.double(system("getconf CLK_TCK", intern=TRUE))
+	out <- vector(mode = 'list', length = 8)
+	names(out) <- c('minflt', 'cminflt', 'majflt', 'cmajflt', 'utime', 'stime',
+	                'cutime', 'cstime')
+	data <- scan(file = '/proc/self/stat', what = 'string', quiet = TRUE)
+	out[['minflt']] <- as.integer(data[9]) 
+	out[['cminflt']] <- as.integer(data[10]) 
+	out[['majflt']] <- as.integer(data[11])  
+	out[['cmajflt']] <- as.integer(data[12])  
+	out[['utime']] <- as.double(data[13])/sc_clk_tck 
+	out[['stime']] <-  as.double(data[14])/sc_clk_tck 
+	out[['cutime']] <-  as.double(data[15])/sc_clk_tck 
+	out[['cstime']] <-  as.double(data[16])/sc_clk_tck 
+	out
+}
 
